@@ -9,11 +9,30 @@ import model as modellib
 from ast import literal_eval as make_tuple
 import imageio
 import visualize
+import random
 from brands import get_class_names, InferenceConfig
 
 # Creates a color layer and adds Gaussian noise.
 # For each pixel, the same noise value is added to each channel
 # to mitigate hue shfting.
+
+
+def draw_mosaic(image):
+    mosaic_range = [8, 16]
+    row, col, ch = image.shape
+    half_patch = np.random.randint(mosaic_range[0], mosaic_range[1]+1, 1)[0]
+    img_out = image.copy()
+
+    for i in range(half_patch, row - 1 - half_patch, half_patch):
+        for j in range(half_patch, col - 1 - half_patch, half_patch):
+            k1 = random.random() - 0.5
+            k2 = random.random() - 0.5
+            m = np.floor(k1 * (half_patch * 2 + 1))
+            n = np.floor(k2 * (half_patch * 2 + 1))
+            h = int((i + m) % row)
+            w = int((j + n) % col)
+            img_out[i - half_patch:i + half_patch, j - half_patch:j + half_patch, :] = image[h, w, :]
+    return img_out
 
 
 def create_noisy_color(image, color):
@@ -96,67 +115,15 @@ def person_blocker(args, outfile):
             mask_selected = np.zeros((image.shape[0], image.shape[1]))
 
         # Replace object masks with noise
-        mask_color = string_to_rgb_triplet(args.color)
+        #mask_color = string_to_rgb_triplet(args.color)
         image_masked = image.copy()
-        noisy_color = create_noisy_color(image, mask_color)
-        print('object_indices', object_indices)
-        print('mask_selected', mask_selected.shape)
-        print('image_masked', image_masked.shape)
-        print('noisy_color', noisy_color.shape)
-        image_masked[mask_selected > 0] = noisy_color[mask_selected > 0]
+        mosaic_img = draw_mosaic(image)
+        #noisy_color = create_noisy_color(image, mask_color)
+        #print('object_indices', object_indices)
+        #print('mask_selected', mask_selected.shape)
+        #print('image_masked', image_masked.shape)
+        #print('noisy_color', noisy_color.shape)
+        #image_masked[mask_selected > 0] = noisy_color[mask_selected > 0]
+        image_masked[mask_selected > 0] = mosaic_img[mask_selected > 0]
 
         imageio.imwrite(outfile, image_masked)
-    
-    '''
-    # Create GIF. The noise will be random for each frame,
-    # which creates a "static" effect
-
-    images = [image_masked]
-    num_images = 10   # should be a divisor of 30
-
-    for _ in range(num_images - 1):
-        new_image = image.copy()
-        noisy_color = create_noisy_color(image, mask_color)
-        new_image[mask_selected > 0] = noisy_color[mask_selected > 0]
-        images.append(new_image)
-
-    imageio.mimsave('person_blocked.gif', images, fps=30., subrectangles=True)
-    '''
-
-
-
-'''
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Person Blocker - Automatically "block" people '
-                    'in images using a neural network.')
-    parser.add_argument('-i', '--image',  help='Image file name.',
-                        required=False)
-    parser.add_argument(
-        '-m', '--model',  help='path to COCO model', default=None)
-    parser.add_argument('-o',
-                        '--objects', nargs='+',
-                        help='object(s)/object ID(s) to block. ' +
-                        'Use the -names flag to print a list of ' +
-                        'valid objects',
-                        default='person')
-    parser.add_argument('-c',
-                        '--color', nargs='?', default='(255, 255, 255)',
-                        help='color of the "block"')
-    parser.add_argument('-l',
-                        '--labeled', dest='labeled',
-                        action='store_true',
-                        help='generate labeled image instead')
-    parser.add_argument('-n',
-                        '--names', dest='names',
-                        action='store_true',
-                        help='prints class names and exits.')
-    parser.set_defaults(labeled=False, names=False)
-    args = parser.parse_args()
-
-    if args.names:
-        print(get_class_names())
-        sys.exit()
-
-    person_blocker(args)
-'''
