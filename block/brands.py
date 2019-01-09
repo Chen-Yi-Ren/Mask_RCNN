@@ -17,19 +17,17 @@ import cv2
 import skimage.io
 import matplotlib
 import matplotlib.pyplot as plt
-from config import Config
+
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../Mask_RCNN/")
+ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
-#from mrcnn.config import Config
+from mrcnn.config import Config
 from mrcnn import utils
 import mrcnn.model as modellib
 from mrcnn import visualize
 from mrcnn.model import log
-
-
 
 
 def get_class_names():
@@ -177,7 +175,3 @@ class BrandsDataset(utils.Dataset):
         '''
         #brands = info['brands']
         return mask, info['brands']
-
-class InferenceConfig(BrandsConfig):
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
