@@ -7,7 +7,7 @@ import cv2
 import argparse
 import matplotlib
 import matplotlib.pyplot as plt
-from brands import BrandsConfig, BrandsDataset, InferenceConfig
+from brands import BrandsConfig, BrandsDataset
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
@@ -20,6 +20,10 @@ from mrcnn import visualize
 from mrcnn.model import log
 
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+
+class InferenceConfig(BrandsConfig):
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
 
 def get_ax(rows=1, cols=1, size=8):
     """Return a Matplotlib Axes array to be used in
@@ -65,8 +69,8 @@ def training(config, MODEL_DIR, init_with):
     
     model.train(dataset_train, dataset_val, 
                 learning_rate=config.LEARNING_RATE, 
-                epochs=5, 
-                layers='heads')
+                epochs=50, 
+                layers='3+')
     '''
     model.train(dataset_train, dataset_val, 
                 learning_rate=config.LEARNING_RATE / 10,

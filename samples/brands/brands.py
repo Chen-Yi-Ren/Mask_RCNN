@@ -30,8 +30,6 @@ from mrcnn import visualize
 from mrcnn.model import log
 
 
-
-
 def get_class_names():
     return np.array(['BG', 'HP', 'adidas_symbol', 'adidas_text', 'aldi', 'apple', 'becks_symbol',
                      'becks_text', 'bmw', 'carlsberg_symbol', 'carlsberg_text', 'chimay_symbol',
@@ -158,9 +156,22 @@ class BrandsDataset(utils.Dataset):
             mask_path =  A + '.' + B + '.' + mask0 + '.png'
             mask_img = skimage.io.imread(mask_path).astype(np.bool)
             mask.append(mask_img)
+            '''
+            if i == 0:
+                mask_img = skimage.io.imread(mask_path)
+            else:
+                buffer = skimage.io.imread(mask_path)
+                mask_img = mask_img + buffer
+            '''
         mask = np.stack(mask, axis=-1)
-        return mask, info['brands']
+        '''
+        height = mask_img.shape[0]
+        width = mask_img.shape[1]
 
-class InferenceConfig(BrandsConfig):
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
+        for i in range(height):
+            for j in range(width):
+                if mask_img[i,j] > 255:
+                    mask_img[i,j] = 255
+        '''
+        #brands = info['brands']
+        return mask, info['brands']
